@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 // Publish only these application resources. Never copy the project directory wholesale.
 const PUBLIC_FILES=[
- 'index.html','styles.css','config.js','app.js','pdf.js','15.png',
+ 'index.html','styles.css','config.js','app.js','pdf.js','guide-content.js','15.png',
  'assets/pdf-assets.js','assets/contact-qr.js','assets/open-sans-regular.woff',
  'assets/poppins-regular.woff2','assets/poppins-semibold.woff2',
  'assets/OPEN-SANS-LICENSE.txt','assets/OPEN-SANS-NOTICE.txt',

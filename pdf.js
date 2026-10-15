@@ -29,6 +29,7 @@ async function loadFont(){
 async function build(data){
  const font=await(fontPromise||(fontPromise=loadFont().catch(e=>{fontPromise=null;throw e;}))),assets=window.MENTORA_PDF_ASSETS;
  const glyphs=new Map(),audit=[],pages=[],links=[];let commands=[],y=0,page=0;
+ const guide=window.MentoraGuide.create(data,data.profile);
  const navy='0.043 0.145 0.271',teal='0.18 0.769 0.714',ink='0.188 0.259 0.329';
  const normalized=s=>String(s).normalize('NFC').replace(/[\r\n\t]+/g,' ');
  const glyph=ch=>font.glyph(ch.codePointAt(0))||font.glyph(63);
@@ -39,16 +40,45 @@ async function build(data){
  function paragraph(text,{size=11,x=44,max=507,color=ink,gap=9}={}){for(const s of wrap(text,max,size)){line(s,x,y,size,color);y+=size*1.42;}y+=gap;}
  function label(text){paragraph(text,{size:13,color:navy,gap:8});}
  function rect(x,top,w,h,color,stroke=false){commands.push(`${color} ${stroke?'RG':'rg'} ${x} ${841.89-top-h} ${w} ${h} re ${stroke?'S':'f'}`);}
- function start(n){page=n;commands=[];y=0;rect(0,0,595.28,5,teal);commands.push(`q 150 0 0 150 25 ${841.89-112} cm /Logo Do Q`);line('MI RUTA DIGITAL',375,38,10,navy);line(`Página ${n} de 2`,464,57,9,ink);y=101;}
- function finish(){if(y>770)throw Error('El contenido supera el espacio disponible; vuelve a intentar con un área más breve.');line('Mentora 360 · Conocimiento que transforma',44,798,9,navy);line('Orientación inicial basada en tus respuestas',44,814,8,ink);pages.push(commands.join('\n'));}
- start(1);paragraph('Mi ruta digital',{size:25,color:navy,gap:9});paragraph(data.name,{size:19,color:navy,gap:15});label('Tu objetivo');paragraph(data.objective);label('Por qué esta ruta');paragraph(data.why);paragraph(data.support,{size:10.5});label('Tus tres primeros pasos');paragraph('Marca cada casilla cuando completes el paso.',{size:10,gap:10});
- data.steps.forEach((s,i)=>{rect(45,y+3,10,10,navy,true);paragraph(`${i+1}. ${s}`,{x:66,max:485,size:11,gap:14});});finish();
- start(2);paragraph('De tu ruta a la práctica',{size:21,color:navy,gap:10});label(data.exercise.title);paragraph(data.exercise.context,{gap:7});label('Cómo hacerlo');data.exercise.instructions.forEach((s,i)=>paragraph(`${i+1}. ${s}`,{size:11,gap:6}));label('Resultado esperado');paragraph(data.exercise.expected,{gap:8});
- label('Mi próximo paso');const writingLines=y>550?1:2;for(let i=0;i<writingLines;i++){commands.push(`0.77 0.83 0.84 RG 44 ${841.89-y-16} m 551 ${841.89-y-16} l S`);y+=22;}
- if(y>600)throw Error('El ejercicio supera el espacio disponible para los contactos.');
- line('¿Quieres aplicar esta ruta a tu trabajo? Trabajémosla contigo.',44,610,11,navy);
- y=635;label('Sigamos en contacto');
- function contactLine(text,url,x,top,size=10.5){line(text,x,top,size,navy);links.push({url,rect:[x,841.89-top-size-3,Math.min(551,x+width(text,size)),841.89-top+2]});}
+ function start(n){page=n;commands=[];y=0;rect(0,0,595.28,5,teal);commands.push(`q 150 0 0 150 25 ${841.89-112} cm /Logo Do Q`);line('MI RUTA DIGITAL',375,38,10,navy);line(`Página ${n} de 4`,464,57,9,ink);y=101;}
+ function finish(){if(y>777)throw Error('El contenido supera el espacio disponible de la guía: página '+page+', posición '+y);line('Mentora 360 · Conocimiento que transforma',44,798,9,navy);line('Orientación inicial basada en tus respuestas',44,814,8,ink);pages.push(commands.join('\n'));}
+ function title(text,kicker){paragraph(kicker,{size:10,color:navy,gap:7});paragraph(text,{size:22,color:navy,gap:12});}
+ function checklist(items){for(const text of items){rect(45,y+3,9,9,navy,true);paragraph(text,{x:63,max:488,size:11,gap:7});}}
+ function promptBlock(text){
+  const rows=text.split('\n').flatMap(t=>wrap(t,479,11));const height=rows.length*15.62+22;
+  if(y+height>777)throw Error('El prompt no cabe completo en una página.');
+  rect(44,y,507,height,'0.93 0.97 0.96');y+=11;
+  for(const row of rows){line(row,58,y,11,navy);y+=15.62;}y+=18;
+ }
+ start(1);title('Tu punto de partida','MI RUTA DIGITAL · 1 / 4');paragraph(data.name,{size:19,color:navy,gap:11});
+ label('Por qué esta ruta');paragraph(data.why);label('Tu objetivo');paragraph('Resultado concreto: '+guide.deliverable+'. '+data.objective);
+ label('Prepara lo necesario');paragraph(guide.prepare);paragraph(data.support,{size:11,gap:10});
+ label('Tus tres primeros pasos');data.steps.forEach((text,i)=>paragraph(`${i+1}. ${text}`,{gap:10}));
+ paragraph(guide.safety,{size:10.5,gap:0});finish();
+ start(2);title('Un ejercicio para tu trabajo','PRUEBA CON UN CASO · 2 / 4');label(guide.title);
+ paragraph('Tu caso: '+guide.activity+'. Trabaja con '+guide.tool+'.',{gap:7});paragraph('Para enfocar tu objetivo: '+guide.goalTip,{gap:8});
+ guide.instructions.forEach((text,i)=>paragraph(`${i+1}. ${text}`,{gap:7}));
+ if(guide.table){
+  const cols=[44,153,451],widths=[109,298,100],rows=[guide.table.headers,...guide.table.rows];
+  rows.forEach((row,i)=>{rect(44,y,507,23,i===0?'0.90 0.95 0.94':'0.97 0.98 0.98');row.forEach((cell,j)=>line(cell,cols[j]+7,y+4,11,navy));y+=24;});y+=8;
+ }
+ label('Ejemplo resuelto');paragraph(guide.example);label('Resultado esperado y cuándo terminar');paragraph(guide.expected,{gap:0});finish();
+ start(3);title('Hazlo con ayuda de IA','COPIA, COMPLETA Y COMPRUEBA · 3 / 4');
+ paragraph('Puedes copiar el prompt en un asistente como ChatGPT o Gemini. Sustituye cada texto entre corchetes por tu situación; confirma las herramientas y usa solo la información necesaria.',{gap:7});
+ paragraph(guide.safety,{size:10.5,gap:10});label('Prompt para tu ruta');promptBlock(guide.prompt);
+ label('Un segundo prompt para revisar');promptBlock(guide.reviewPrompt);
+ label('Qué hacer con la respuesta');paragraph(guide.verify,{gap:0});finish();
+ start(4);title('Comprueba y aplica','REVISA ANTES DE USAR · 4 / 4');
+ checklist(guide.check);label('Errores habituales y cómo corregirlos');
+ for(const [problem,fix] of guide.errors)paragraph(problem+': '+fix,{gap:6});
+ label('Si prefieres hacerlo sin IA');paragraph(guide.offline,{gap:9});
+ for(const text of ['Mi próximo paso','Cuándo lo haré','Cómo sabré que funcionó']){
+  line(text,44,y,11,navy);commands.push(`0.77 0.83 0.84 RG 210 ${841.89-y-15} m 551 ${841.89-y-15} l S`);y+=29;
+ }
+ if(y>590)throw Error('La revisión supera el espacio reservado para los contactos.');
+ y=596;paragraph('¿Quieres aplicar esta ruta a tu trabajo? En Mentora 360 te acompañamos paso a paso.',{size:11,gap:7});
+ y=640;label('Sigamos en contacto');
+ function contactLine(text,url,x,top,size=10.5){line(text,x,top,size,navy);links.push({page,url,rect:[x,841.89-top-size-3,Math.min(551,x+width(text,size)),841.89-top+2]});}
  if(data.contactUrl){
   const label=data.contactKind==='whatsapp'?'WhatsApp · '+data.contactPhone:data.contactUrl.startsWith('mailto:')?'Correo: '+data.contactUrl.slice(7):'Contacto principal: '+data.contactUrl.replace(/^https?:\/\//,'');
   const parts=wrap(label,304,10.5);for(const part of parts){contactLine(part,data.contactUrl,44,y);y+=15;}
@@ -58,7 +88,7 @@ async function build(data){
  function drawQR(matrix,url,x,top,size,label){
   const n=matrix.length,module=size/n;rect(x-3,top-3,size+6,size+6,'1 1 1');
   for(let row=0;row<n;row++)for(let col=0;col<n;col++)if(matrix[row][col])rect(x+col*module,top+row*module,module+0.005,module+0.005,'0 0 0');
-  contactLine(label,url,x,top+size+8,9.5);links.push({url,rect:[x,841.89-top-size,x+size,841.89-top]});
+  contactLine(label,url,x,top+size+8,9.5);links.push({page,url,rect:[x,841.89-top-size,x+size,841.89-top]});
  }
  const web=window.MENTORA_CONTACT_QR;if(!web||web.url!=='https://360-mentora.com/')throw Error('Código QR web no disponible');
  if(data.contactKind==='whatsapp'){
@@ -78,8 +108,8 @@ async function build(data){
  const mask=add(stream(`/Type /XObject /Subtype /Image /Width ${assets.width} /Height ${assets.height} /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode`,dec(assets.logoAlpha)));
  const logo=add(stream(`/Type /XObject /Subtype /Image /Width ${assets.width} /Height ${assets.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /SMask ${mask} 0 R`,dec(assets.logoRGB)));
  const annotations=links.map(link=>{const escaped=link.url.replace(/[^\x21-\x7e]/g,c=>encodeURIComponent(c)).replace(/[\\()]/g,'\\$&');return add(`<< /Type /Annot /Subtype /Link /Rect [${link.rect.join(' ')}] /Border [0 0 0] /A << /S /URI /URI (${escaped}) >> >>`);});
- const pageIds=pages.map((content,i)=>{const c=add(stream('',bytes(content)));return add(`<< /Type /Page /Parent ${tree} 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${type0} 0 R >> /XObject << /Logo ${logo} 0 R >> >> /Contents ${c} 0 R ${i===1?`/Annots [${annotations.map(id=>id+' 0 R').join(' ')}]`:''} >>`);});
- objects[catalog-1]=`<< /Type /Catalog /Pages ${tree} 0 R /Lang (es-MX) >>`;objects[tree-1]=`<< /Type /Pages /Kids [${pageIds.map(id=>id+' 0 R').join(' ')}] /Count 2 >>`;
+ const pageIds=pages.map((content,i)=>{const c=add(stream('',bytes(content)));return add(`<< /Type /Page /Parent ${tree} 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${type0} 0 R >> /XObject << /Logo ${logo} 0 R >> >> /Contents ${c} 0 R /Annots [${annotations.filter((id,j)=>links[j].page===i+1).map(id=>id+' 0 R').join(' ')}] >>`);});
+ objects[catalog-1]=`<< /Type /Catalog /Pages ${tree} 0 R /Lang (es-MX) >>`;objects[tree-1]=`<< /Type /Pages /Kids [${pageIds.map(id=>id+' 0 R').join(' ')}] /Count ${pages.length} >>`;
  const chunks=[bytes('%PDF-1.7\n%Mentora360\n')],offsets=[0];let position=chunks[0].length;objects.forEach((obj,i)=>{offsets.push(position);const c=join([bytes(`${i+1} 0 obj\n`),typeof obj==='string'?bytes(obj):obj,bytes('\nendobj\n')]);chunks.push(c);position+=c.length;});chunks.push(bytes(`xref\n0 ${objects.length+1}\n0000000000 65535 f \n${offsets.slice(1).map(n=>String(n).padStart(10,'0')+' 00000 n \n').join('')}trailer\n<< /Size ${objects.length+1} /Root ${catalog} 0 R >>\nstartxref\n${position}\n%%EOF`));
  return {bytes:join(chunks),audit};
 }
