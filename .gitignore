@@ -1,0 +1,32 @@
+# Local history and generated publication output
+backups/
+dist/
+.pages-build-*/
+.DS_Store
+node_modules/
+coverage/
+playwright-report/
+test-results/
+*.log
+*.pdf
+# Credentials and private local configuration
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+.netrc
+.npmrc
+.private/
+.aws/
+.codex/
+.agents/
+.ssh/
+responses/
+*.sqlite
+*.sqlite3
+*.db
+
+# Reviewed upload package; do not add a nested copy of the project
+repository-ready/
