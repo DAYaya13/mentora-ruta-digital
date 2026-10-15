@@ -1,7 +1,10 @@
 name: Preparar o publicar GitHub Pages
 
-# No automatic deployment on push. Default manual runs only prepare the artifact.
+# Publicación explícita: solo cambiar publish-request.json activa un despliegue por push.
 on:
+  push:
+    branches: [main]
+    paths: ['.github/publish-request.json']
   workflow_dispatch:
     inputs:
       publish:
@@ -41,7 +44,7 @@ jobs:
           path: dist
 
   deploy:
-    if: ${{ inputs.publish }}
+    if: ${{ github.event_name == 'push' || inputs.publish }}
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -53,6 +56,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/configure-pages@v5
-      - name: Publicar solo con solicitud manual explícita
+      - name: Publicar con solicitud explícita
         id: deployment
         uses: actions/deploy-pages@v4

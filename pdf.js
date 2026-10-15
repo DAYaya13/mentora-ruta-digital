@@ -50,17 +50,23 @@ async function build(data){
  y=635;label('Sigamos en contacto');
  function contactLine(text,url,x,top,size=10.5){line(text,x,top,size,navy);links.push({url,rect:[x,841.89-top-size-3,Math.min(551,x+width(text,size)),841.89-top+2]});}
  if(data.contactUrl){
-  const label=data.contactUrl.startsWith('mailto:')?'Correo: '+data.contactUrl.slice(7):'Contacto principal: '+data.contactUrl.replace(/^https?:\/\//,'');
-  const parts=wrap(label,365,10.5);for(const part of parts){contactLine(part,data.contactUrl,44,y);y+=15;}
+  const label=data.contactKind==='whatsapp'?'WhatsApp · '+data.contactPhone:data.contactUrl.startsWith('mailto:')?'Correo: '+data.contactUrl.slice(7):'Contacto principal: '+data.contactUrl.replace(/^https?:\/\//,'');
+  const parts=wrap(label,304,10.5);for(const part of parts){contactLine(part,data.contactUrl,44,y);y+=15;}
  }
  const contacts=data.officialLinks||window.MENTORA_CONFIG.officialLinks;
  for(const contact of contacts){contactLine(contact.name+' · '+contact.display,contact.url,44,y);y+=17;}
- const qr=window.MENTORA_CONTACT_QR;if(!qr||qr.url!=='https://360-mentora.com/')throw Error('Código QR no disponible');
- const qrX=447,qrTop=651,qrSize=96,module=qrSize/qr.size;
- rect(qrX-4,qrTop-4,qrSize+8,qrSize+8,'1 1 1');
- for(let row=0;row<qr.size;row++)for(let col=0;col<qr.size;col++)if(qr.rows[row][col])rect(qrX+col*module,qrTop+(qr.size-1-row)*module,module+0.015,module+0.015,'0 0 0');
- contactLine('Visita nuestra web',qr.url,442,753,10);
- links.push({url:qr.url,rect:[qrX,841.89-qrTop-qrSize,qrX+qrSize,841.89-qrTop]});
+ function drawQR(matrix,url,x,top,size,label){
+  const n=matrix.length,module=size/n;rect(x-3,top-3,size+6,size+6,'1 1 1');
+  for(let row=0;row<n;row++)for(let col=0;col<n;col++)if(matrix[row][col])rect(x+col*module,top+row*module,module+0.005,module+0.005,'0 0 0');
+  contactLine(label,url,x,top+size+8,9.5);links.push({url,rect:[x,841.89-top-size,x+size,841.89-top]});
+ }
+ const web=window.MENTORA_CONTACT_QR;if(!web||web.url!=='https://360-mentora.com/')throw Error('Código QR web no disponible');
+ if(data.contactKind==='whatsapp'){
+  const qr=qrcodegen.QrCode.encodeText(data.contactUrl,qrcodegen.QrCode.Ecc.LOW),quiet=4,n=qr.size+quiet*2;
+  const matrix=Array.from({length:n},(_,row)=>Array.from({length:n},(_,col)=>qr.getModule(col-quiet,row-quiet)?1:0));
+  drawQR(matrix,data.contactUrl,360,660,90,'WhatsApp');
+ }
+ drawQR([...web.rows].reverse(),web.url,461,660,90,'Visita nuestra web');
  y=Math.max(y,768);finish();
  const objects=[];const add=value=>{objects.push(value);return objects.length;};const stream=(dict,content)=>join([bytes(`<< ${dict} /Length ${content.length} >>\nstream\n`),content,bytes('\nendstream')]);
  const catalog=add(''),tree=add('');const fontFile=add(stream(`/Length1 ${font.ttf.length}`,font.ttf));const descriptor=add(`<< /Type /FontDescriptor /FontName /MentoraOpenSans /Flags 32 /FontBBox [${font.bbox.join(' ')}] /ItalicAngle 0 /Ascent ${font.ascent} /Descent ${font.descent} /CapHeight 714 /StemV 80 /FontFile2 ${fontFile} 0 R >>`);

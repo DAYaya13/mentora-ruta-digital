@@ -53,7 +53,7 @@ function recommendation(a,other){const r=routes[a[1]],beginner=a[2].includes(5)|
 function renderResult(){
  const r=recommendation(answers,details);
  setView('result');
- quiz.innerHTML=`<p class="result-tag">TU RUTA DIGITAL SUGERIDA</p><h2 class="result-heading" data-heading tabindex="-1">${r.name}</h2><div class="result-grid"><div><p class="result-why">${escapeHTML(r.why)}</p><p class="result-support">${r.support}</p></div><div class="result-steps"><h3>Tus tres primeros pasos</h3><ol class="steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div></div><details class="result-details"><summary>Una idea para tu trabajo</summary><p>${r.example}</p></details><details class="result-details"><summary>Herramientas para comenzar</summary><p>${escapeHTML(r.familiar)}</p><div class="tools">${r.tools.map(t=>`<span class="tool">${t}</span>`).join('')}</div><p class="note">La disponibilidad, los planes y las funciones pueden variar. Revisa las condiciones de cada herramienta antes de usarla.</p></details><div class="download-gift"><button type="button" id="download-route" class="button primary">Descargar gratis mi ruta digital</button><p>Llévate tus primeros pasos y un ejercicio práctico para comenzar.</p><p id="download-status" class="note" role="status" aria-live="polite"></p><p id="download-error" class="error" role="alert"></p></div><div class="result-contact"><p>¿Quieres aplicar esta ruta a tu trabajo? Contacta a Mentora 360</p><a class="button secondary" href="${escapeHTML(primaryContact().url)}">${primaryContact().label}</a></div><p class="note">Esta ruta es una orientación inicial basada en tus respuestas.</p><button id="reset" class="button secondary result-reset">Volver a responder</button>`;
+ quiz.innerHTML=`<p class="result-tag">TU RUTA DIGITAL SUGERIDA</p><h2 class="result-heading" data-heading tabindex="-1">${r.name}</h2><div class="result-grid"><div><p class="result-why">${escapeHTML(r.why)}</p><p class="result-support">${r.support}</p></div><div class="result-steps"><h3>Tus tres primeros pasos</h3><ol class="steps">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div></div><details class="result-details"><summary>Una idea para tu trabajo</summary><p>${r.example}</p></details><details class="result-details"><summary>Herramientas para comenzar</summary><p>${escapeHTML(r.familiar)}</p><div class="tools">${r.tools.map(t=>`<span class="tool">${t}</span>`).join('')}</div><p class="note">La disponibilidad, los planes y las funciones pueden variar. Revisa las condiciones de cada herramienta antes de usarla.</p></details><div class="download-gift"><button type="button" id="download-route" class="button primary">Descargar gratis mi ruta digital</button><p>Llévate tus primeros pasos y un ejercicio práctico para comenzar.</p><p id="download-status" class="note" role="status" aria-live="polite"></p><p id="download-error" class="error" role="alert"></p></div><div class="result-contact"><p>¿Quieres aplicar esta ruta a tu trabajo? Contacta a Mentora 360</p><a class="button secondary" href="${escapeHTML(primaryContact(r.name).url)}">${primaryContact(r.name).label}</a></div><p class="note">Esta ruta es una orientación inicial basada en tus respuestas.</p><button id="reset" class="button secondary result-reset">Volver a responder</button>`;
  quiz.querySelector('#download-route').addEventListener('click',()=>downloadRoute(r,[...answers.slice(0,2),[...answers[2]],...answers.slice(3)],{...details}));
  quiz.querySelector('#reset').addEventListener('click',()=>{answers=[null,null,[],null,null];details={0:'',2:''};step=0;startDiagnosis();});
  focusHeading();window.scrollTo({top:0});
@@ -73,7 +73,7 @@ function downloadData(r,a,other){
  ];
  const beginner=a[2].includes(5)||a[3]===0;
  const objective='Practicar en '+area+' para '+benefits[a[4]]+', '+(beginner?'con un caso pequeño y acompañamiento paso a paso.':a[3]===1?'siguiendo una guía sencilla.':a[3]===2?'explorando con una copia de prueba.':'comparando alternativas en un caso acotado antes de ampliarlo.');
- return {name:r.name,why:r.why,steps:[...r.steps],support:r.support,objective,exercise:exercises[a[1]],contactUrl:validUrl?url:null,officialLinks:window.MENTORA_CONFIG.officialLinks,filename:'mentora360-mi-ruta-'+routeSlugs[a[1]]+'.pdf'};
+ return {name:r.name,why:r.why,steps:[...r.steps],support:r.support,objective,exercise:exercises[a[1]],contactUrl:primaryContact(r.name).url,contactPhone:window.MENTORA_CONFIG.contactPhone,contactKind:validUrl&&/^https:\/\/wa\.me\//i.test(url)?'whatsapp':'other',officialLinks:window.MENTORA_CONFIG.officialLinks,filename:'mentora360-mi-ruta-'+routeSlugs[a[1]]+'.pdf'};
 }
 async function downloadRoute(r,a,other){
  const button=quiz.querySelector('#download-route'),status=quiz.querySelector('#download-status'),error=quiz.querySelector('#download-error');
@@ -106,7 +106,13 @@ document.querySelectorAll('a[href="#inicio"]').forEach(link=>link.addEventListen
 const officialLinks=window.MENTORA_CONFIG.officialLinks;
 const url=window.MENTORA_CONFIG?.contactUrl?.trim();
 const validUrl=url&&/^(https:\/\/|mailto:)[^\s]+$/i.test(url);
-function primaryContact(){return validUrl?{url,label:url.startsWith('mailto:')?'Escríbenos por correo':/https:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)\//i.test(url)?'Escríbenos por WhatsApp':'Contacta a Mentora 360'}:{url:officialLinks.find(link=>link.name==='Instagram').url,label:'Escríbenos por Instagram'};}
+function primaryContact(routeName){
+ if(validUrl&&/^https:\/\/wa\.me\//i.test(url)){
+  const message=routeName?`Hola, completé la ruta digital de Mentora 360. Mi ruta sugerida fue ${routeName} y me gustaría recibir asesoría para aplicarla a mi trabajo.`:'Hola, me interesa la asesoría de Mentora 360. Quisiera orientación para aplicar tecnología en mi trabajo.';
+  return {url:url.split('?')[0]+'?text='+encodeURIComponent(message),label:'Hablemos por WhatsApp'};
+ }
+ return validUrl?{url,label:url.startsWith('mailto:')?'Escríbenos por correo':'Contacta a Mentora 360'}:{url:officialLinks.find(link=>link.name==='Instagram').url,label:'Escríbenos por Instagram'};
+}
 const contact=primaryContact();
 document.querySelector('#contact').className='contact-block';
 document.querySelector('#contact').innerHTML=`<a class="button primary" href="${escapeHTML(contact.url)}">${contact.label}</a>`;

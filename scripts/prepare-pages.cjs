@@ -7,7 +7,8 @@ const PUBLIC_FILES=[
  'assets/pdf-assets.js','assets/contact-qr.js','assets/open-sans-regular.woff',
  'assets/poppins-regular.woff2','assets/poppins-semibold.woff2',
  'assets/OPEN-SANS-LICENSE.txt','assets/OPEN-SANS-NOTICE.txt',
- 'assets/POPPINS-LICENSE.txt','assets/POPPINS-NOTICE.txt'
+ 'assets/POPPINS-LICENSE.txt','assets/POPPINS-NOTICE.txt',
+ 'assets/vendor/qrcodegen.js','assets/vendor/qrcodegen-LICENSE.txt'
 ];
 function prepare(){
  const out=path.join(ROOT,'dist');
