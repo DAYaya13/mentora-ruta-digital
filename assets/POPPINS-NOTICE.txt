@@ -1,0 +1,8 @@
+Poppins, normal weights 400 and 600, public Google Fonts preview subsets.
+Copyright 2020 The Poppins Project Authors (https://github.com/itfoundry/Poppins)
+Licensed under SIL Open Font License 1.1; see POPPINS-LICENSE.txt.
+Downloaded through Google Fonts' public Poppins specimen page with Latin
+letters, Spanish accented characters, digits and punctuation selected.
+Stored locally so publication does not depend on a third-party font server.
+Characters outside the subset use the local Open Sans fallback.
+No questionnaire responses were used in the font request.

@@ -1,0 +1,11 @@
+Open Sans Regular
+Digitized data copyright © 2010-2011, Google Corporation.
+Licensed under the Apache License, Version 2.0.
+See OPEN-SANS-LICENSE.txt.
+
+Source: public font resource from https://360-mentora.com/
+_assets/fonts/8a554be3f10d4a5c0b33a5b14bbcaa92.woff
+The original WOFF is preserved in open-sans-regular.woff and embedded
+unchanged in pdf-assets.js. It is decoded into TrueType for PDF embedding.
+The PDF generator is project code; no external PDF library is bundled.
+The Mentora 360 logo belongs to its owner and is not covered by this font license.

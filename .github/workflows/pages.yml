@@ -1,0 +1,58 @@
+name: Preparar o publicar GitHub Pages
+
+# No automatic deployment on push. Default manual runs only prepare the artifact.
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publicar en GitHub Pages (activar solo cuando se autorice)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Preparar solo archivos públicos
+        run: node scripts/prepare-pages.cjs
+      - name: Comprobar JavaScript de producción
+        run: |
+          node --check app.js
+          node --check pdf.js
+          node --check config.js
+      - name: Preparar artefacto (no publica)
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    if: ${{ inputs.publish }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Publicar solo con solicitud manual explícita
+        id: deployment
+        uses: actions/deploy-pages@v4
